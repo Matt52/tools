@@ -1,0 +1,68 @@
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+categorical_features_1 = ['Self_Employed', 'Education']
+categorical_features_2 = ['Credit_History']
+categorical_features_3 = ['Gender', 'Married', 'Dependents', 'Loan_Amount_Term', 'Property_Area']
+numeric_features = ['LoanAmount', 'ApplicantIncome', 'CoapplicantIncome']
+
+
+
+###################################################################################
+#categorical fill NA with Unknown and encode
+categorical_transformer_1 = Pipeline(
+    steps=[
+    ('imputer', SimpleImputer(strategy='constant', fill_value='Unknown'))
+    ,('onehot', OneHotEncoder(drop='first')) # with handle_unknown='ignore' works when missing in train/test
+    ]
+)
+
+###################################################################################
+#categorical fill NA with -1 and encode
+categorical_transformer_2 = Pipeline(
+    steps=[
+    ('imputer', SimpleImputer(strategy='constant', fill_value=-1))
+    ,('onehot', OneHotEncoder(drop='first', categories='auto')) #we have to use "categories='auto'" as it is numerical
+    ]
+)
+
+###################################################################################
+#categorical fill NA with most frequent
+categorical_transformer_3 = Pipeline(
+    steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent'))
+    ,('onehot', OneHotEncoder(drop='first'))
+    ]
+)
+
+###################################################################################
+#numerical fill median
+numeric_transformer = Pipeline(
+    steps=[
+    ('imputer', SimpleImputer(strategy='median'))
+    #,('scaler', StandardScaler())
+    ]
+)
+
+
+:
+from sklearn.compose import ColumnTransformer
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat1', categorical_transformer_1, categorical_features_1),
+        ('cat2', categorical_transformer_2, categorical_features_2),
+        ('cat3', categorical_transformer_3, categorical_features_3)
+    ])
+    
+    
+ 19]:
+from sklearn.linear_model import LogisticRegression
+#from sklearn.decomposition import PCA
+
+lr = Pipeline(steps=[('preprocessor', preprocessor)#,('pca', PCA())
+                    ,('classifier', LogisticRegression(solver='liblinear'))
+                    ]
+             )
